@@ -1,18 +1,13 @@
 # Practical 2: Constraints
 
-## Handout date: 6/Mar/2019.
-
-## Deadline: 15/Mar/2019 23:59.
+## Not graded.
 
 The second practical generalizes and extends the first practical, by working with constraint-based velocity and position resolution. We still work only with rigid bodies. The objectives of the practical are:
 
 1. Implement impulse-based velocity resolution by constraints (Lecture 6).
- <br />
-2. Implement position correction by constraints (Lecture 9).
- <br />
-3. Generalize collision resolution to work with the implemented constraint-resolution framework.
- <br />
-4. Extend the framework with some chosen effects.  
+1. Implement position correction by constraints (Lecture 9).
+1. Generalize collision resolution to work with the implemented constraint-resolution framework.
+1. Extend the framework with some chosen effects.  
 
 This is the repository for the skeleton on which you will build your second practical. Using CMake allows you to work and submit your code in all platforms. The entire environment is in C++, but most of the "nastier" coding parts have been simplified; for the most part, you only code the mathemtical-physical parts. The environment is otherwise identical to the first practical, including all compilation instructions.
 
@@ -24,45 +19,43 @@ The practical is mostly about implementing procedures for velocity and position 
 In each scene iteration:
 
 1. Integrate (Practical 1)
-2. Detect collisions.
-3. Resolve Collisions (practical 2 generalization - using constraints).
-4. Correct velocities to be tangent to user constraints.
-5. Fix positions to satisfy user constraints.
+1. Detect collisions.
+1. Resolve Collisions (practical 2 generalization - using constraints).
+1. Correct velocities to be tangent to user constraints.
+1. Fix positions to satisfy user constraints.
 
-The constraints we deal with in this practical are purely *holonomic* and bivariate. That is, each constraint $C$ is of the form $C(x_1,x_2)$, where $x_1$ and $x_2$ are two positions on two meshes (can be the same mesh). We distinguish between user constraints, read from file, and collision constraints, created on the fly in each iteration. Moreover, we distinguish between equality constraints $C=0$ and inequality constraints $C \geq 0$; the latter only matters when they are *violated*, and otherwise should not do anything to velocities or positions. In practice, we use some tolerance $\tau$ that measures validity (opting for $|C|<\tau$ for equality constraints), rather then adhere to perfect $0$ which is unattainable numerically.
+The constraints we deal with in this practical are purely *holonomic* and bivariate. That is, each constraint C is of the form C(x1 ,x2), where x1 and x2 are two positions on two meshes (can be the same mesh). We distinguish between user constraints, read from file, and collision constraints, created on the fly in each iteration. Moreover, we distinguish between equality constraints C=0 and inequality constraints C >= 0; the latter only matters when they are *violated*, and otherwise should not do anything to velocities or positions. In practice, we use some tolerance tau that measures validity (opting for |C|< tau for equality constraints), rather then adhere to perfect 0 which is unattainable numerically.
 
 
 ### Working with Rigid Bodies
 
-The constraints are expressed using any two points on a body (which happen to be vertices in user constraints); nevertheless, the bodies are rigid, and therefore the only movement degrees of freedom for a mesh are its COM position $p$, orientation quaternion $q$, linear COM velocity $v$ and angular velocity $\omega$. Resolving constraints should only work and change these variables, and not touch any individual vertex. Specifically, never alter ```currV``` directly; rather, recompute it from ```origV``` in the end of a time-step iteration after having corrected $p$ and $q$.
+The constraints are expressed using any two points on a body (which happen to be vertices in user constraints); nevertheless, the bodies are rigid, and therefore the only movement degrees of freedom for a mesh are its COM position p, orientation quaternion q, linear COM velocity v and angular velocity omega. Resolving constraints should only work and change these variables, and not touch any individual vertex. Specifically, never alter ```currV``` directly; rather, recompute it from ```origV``` in the end of a time-step iteration after having corrected p and q.
 
 ### Velocity Resolution
 
-For equality constraints, the total velocities $\overline{v}_1$ and $\overline{v}_2$ should always satisfy $Jv=0$, where $J$ is the gradient of the constraint, and $v$ is a vector comprising $v_1, \omega1, v_2,\omega_2$ in order (sanity check: vector length is $12$ variables). If $Jv \neq 0$, You will be computing $\Delta v$ to satisfy $J(v+\Delta v)=0$, using the Lagrange multiplier method learnt in class (Lecture 6; note collision example in slide 22). This requires setting up an (inverse) mass matrix of $12 \times 12$, with the body masses and (inverse) inertia tensors in order. Use $0$ for inverse mass and inverse inertia tensor for fixed bodies, which will simulate the correct effect. Note that the inertia tensor should rotate like in the first practical; essentially your constraint-based collision resolution should be almost equivalent to what you implemented explicitly before.
+For equality constraints, the total velocities v1 and v2 should always satisfy J v = 0, where J is the gradient of the constraint, and v is a vector comprising v1, omega1, v2,omega2 in order (sanity check: vector length is 12 variables). If J v != 0, you will be computing ∆v to satisfy  J(v+ ∆v)=0, using the Lagrange multiplier method learnt in class (Lecture 6; note collision example in slide 22). This requires setting up an (inverse) mass matrix of 12 x 12, with the body masses and (inverse) inertia tensors in order. Use 0 for inverse mass and inverse inertia tensor for fixed bodies, which will simulate the correct effect. Note that the inertia tensor should rotate like in the first practical; essentially your constraint-based collision resolution should be almost equivalent to what you implemented explicitly before.
 
-Note: the part in the mass matrix corresponding to the linear velocity has the scalar masses $m_1$ and $m_2$ repeated $3$ times each in the diagonal of the matrix, for the $x,y,z$ components of the respective velocities.
+Note: the part in the mass matrix corresponding to the linear velocity has the scalar masses m1 and m2 repeated 3 times each in the diagonal of the matrix, for the x,y,z components of the respective velocities.
 
-The coefficient of restitution is given for collisions constraints in order to induce elastic velocity bias; you should use it as instructed in class (user constraints set it to $0$ by default).
+The coefficient of restitution is given for collisions constraints in order to induce elastic velocity bias; you should use it as instructed in class (user constraints set it to 0 by default).
 
-The user constraints that are read from file attach two vertices from two meshes in a distance that has to be maintained. That is, the constraint is $C(x_1,x_2) = \left|x_1-x_2\right| - d_{12}$, where $d_{12}$ is computed for the position at time $t=0$. You should devise $J$ for that constraint (you have a hint for it in Lecture 9; for intuition, you are supposed to get that the velocities of both vertices should not move in a way that changes this distance, like it's a fixed rod).
+The user constraints that are read from file attach two vertices from two meshes in a distance that has to be maintained. That is, the constraint is C(x1,x2) = |x1-x2| - d12, where d12 is computed for the position at time t=0. You should devise J for that constraint (you have a hint for it in Lecture 9; for intuition, you are supposed to get that the velocities of both vertices should not move in a way that changes this distance, like it's a fixed rod).
 
 ### Position Correction
 
-Position correction is similar to velocity correction, except that we take the easy route (in the basic practical requirements), and only correct *linearly*. That is, we do not change $q$, only $p$ of every body. That means the mass matrix is only $6 \times 6$ of body masses, without any inertia tensor components, and the Jacobian only contains derivatives relating to linear movement. That generalizes the linear-interpenetration resolution for collisions. Note that this means totally different $J, M, \lambda$ for this step, which do not relate to those computed in the velocity correction stage! The theoretical details are in lecture 9. We do not employ stiffness in this practical.
+Position correction is similar to velocity correction, except that we take the easy route (in the basic practical requirements), and only correct *linearly*. That is, we do not change q, only p of every body. That means the mass matrix is only 6 x 6 of body masses, without any inertia tensor components, and the Jacobian only contains derivatives relating to linear movement. That generalizes the linear-interpenetration resolution for collisions. Note that this means totally different J, M, lambda for this step, which do not relate to those computed in the velocity correction stage! The theoretical details are in lecture 9. We do not employ stiffness in this practical.
 
 See below for details on where to do all that in the code.
 
 ### Extensions
 
-The above will earn you $80\%$ of the grade. To get a full $100\%$, you must choose a single extensions out of these 3 extension options, and augment the practical with it. Some choices will require minor adaptations to the GUI or the function structure which are easy to do. The extension will earn you $20\%$, and the exact grading will commensurate with the difficulty. Note that this means that all extensions are equal in grade; if you take on a hard extension, it's your own challenge to complete it well.
+This assignment is **not graded** and left to you as exercise. These are further extensions you can add to it (we recommend you implement at least one):
 
-1. Make the fixed-distance user constraint more flexible to some extent, and therefore a two-sided inequality constraint (for instance, the fixed rod could then compress or stretch up to $20\%$ from the original $d_{12}$). **Level: easy**
+1. Make the fixed-distance user constraint more flexible to some extent, and therefore a two-sided inequality constraint (for instance, the fixed rod could then compress or stretch up to 20% from the original d12). **Level: easy**
+1. Fix the linear position-correction hack by adding q orientation correction to constraints. For this you will need the derivatives of the position of a point w.r.t. q, which are not trivial; look [here](http://web.cs.iastate.edu/~cs577/handouts/quaternion.pdf) for inspiration. **Level: intermediate-hard**.
+1. Add another type of original constraint, which has to be concretely exemplified. For instance, bending or some limitation on rotation. **level: intermediate**.
 
-2. Fix the linear position-correction hack by adding $q$ orientation correction to constraints. For this you will need the derivatives of the position of a point w.r.t. $q$, which are not trivial; look [here](http://web.cs.iastate.edu/~cs577/handouts/quaternion.pdf) for inspiration. **Level: intermediate-hard**.
-
-3. Add another type of original constraint, which has to be concretely exemplified. For instance, bending or some limitation on rotation. **level: intermediate**.
-
-You may invent your own extension as substitute to **one** in the list above, but it needs approval on the Lecturer's behalf **beforehand**.
+You may also invent your own extension.
 
 
 ## Installation
@@ -99,12 +92,9 @@ All the code you need to update is in the ``practical1`` folder. Please do not a
 You will find the environment almost identical to the first practical, with these main differences:
 
 1. A constraint file is being read, and has to be given as the third argument to the executable.
-
-2. The ```handleCollision()``` needs to be written by you to work with constraints; see comments within.
-
-3. The ```updateScene()``` function is already written down to work with the game-engine loop.
-
-4. Most of the work is in ```Constraints.h```, where you have to fill in the velocity and position correction functions. This implements a class that is invokes from the scene class.
+1. The ```handleCollision()``` needs to be written by you to work with constraints; see comments within.
+1. The ```updateScene()``` function is already written down to work with the game-engine loop.
+1. Most of the work is in ```Constraints.h```, where you have to fill in the velocity and position correction functions. This implements a class that is invokes from the scene class.
 
 The code you have to complete is always marked as:
 
@@ -129,17 +119,12 @@ object2.mesh  density2  youngModulus2 PoissonRatio2 is_fixed2    COM2     q2
 
 Where:
 
-1. ``objectX.mesh`` - an MESH file (automatically assumed in the `data` subfolder) describing the geometry of a tetrahedral mesh. The original coordinates are translated automatically to have $(0,0,0)$ as their COM.
-<br />
-2. ``density`` - the uniform density of the object. The program will automatically compute the total mass by the volume.
-<br />
-3. ``is_fixed`` - if the object should be immobile (fixed in space) or not.
-<br />
-4. ``COM`` - the initial position in the world where the object would be translated to. That means, where the COM is at time $t=0$.
-<br />
-5. ``q`` - the initial orientation of the object, expressed as a quaternion that rotates the geometry to $q*object*q^{-1}$ at time $t=0$.
-<br />
-6. ``youngModulus1`` and  ``PoissonRatio1`` should be ignored for now; we will use them in the $3^{rd}$ practical.
+1. ``objectX.mesh`` - an MESH file (automatically assumed in the `data` subfolder) describing the geometry of a tetrahedral mesh. The original coordinates are translated automatically to have (0,0,0) as their COM.
+1. ``density`` - the uniform density of the object. The program will automatically compute the total mass by the volume.
+1. ``is_fixed`` - if the object should be immobile (fixed in space) or not.
+1. ``COM`` - the initial position in the world where the object would be translated to. That means, where the COM is at time t=0.
+1. ``q`` - the initial orientation of the object, expressed as a quaternion that rotates the geometry to q *object* q^{-1} at time t=0.
+1. ``youngModulus1`` and  ``PoissonRatio1`` should be ignored for now; we will use them in the third practical.
 
 The user attachment constraints file, given as the third argument, has to have the following format:
 
@@ -150,7 +135,7 @@ mesh_i2 vertex_i2 mesh_j2 vertex_j2
 .....
 ```
 
-Each row is a constraint attaching the vertex ```vertex_i1``` of mesh ```mesh_i1``` to ```vertex_j2``` of mesh ```mesh_j2```. Every row is an independent such constraint. You can find TXT files in the data folder with similar name to the scenes they accompany. You can of course write new ones. Note that the meshes start indexing from $1$---if you put a constraint to mesh $0$, it will get attached to the platform (which should still work).
+Each row is a constraint attaching the vertex ```vertex_i1``` of mesh ```mesh_i1``` to ```vertex_j2``` of mesh ```mesh_j2```. Every row is an independent such constraint. You can find TXT files in the data folder with similar name to the scenes they accompany. You can of course write new ones. Note that the meshes start indexing from 1---if you put a constraint to mesh 0, it will get attached to the platform (which should still work).
 
 
 ### User interface
@@ -168,14 +153,6 @@ The main difference is that user attachement constraints are highlighted as yell
 Note that the ```demo``` folder contains compiled demos for windows and OsX; they are to be used as inspiration, because every solution can be a bit different (butterfly effect).
 
 
-## Submission
-
-The entire code of the practical has to be submitted in a zip file to the lecturer by E-mail. The deadline is **15/Mar/2019 23:59**. Late submissions will not be acceptable unless approved explicitly.
-
-The practical must be done **in pairs**. Doing it alone requires a-priori permission. Any other combination (more than 2 people, or any number not in $\mathbb{N}$) is not allowed.
-
-Unlike the previous practical which was checked in person, this practical will be checked offline by the lecturer (this is due to the unusually large class this year). Please submit only the altered C++ files without any solution files, and they should compile out of the box with the given framework.
-
 ##Frequently Asked Questions
 
 Here are detailed answers to common questions. Please read through whenever ou have a problem, since in most cases someone else would have had it as well.
@@ -187,8 +164,5 @@ Here are detailed answers to common questions. Please read through whenever ou h
 <span style="color:blue">Q:</span> Why is the demo not working out of the box?
 <span style="color:blue">A:</span>: with the same parameters as your input program: infomgp_practical2 "folder_name_without_slash" "name of txt scene files".
 
-
-
-The practical will be checked during a special session in the deadline date . Every pair will have 10 minutes to shortly present their practical, and be tested by the lecturer with some fresh scene files. In addition, the lecturer will ask every person a short question that should be easy to answer if this person was fully involved in the exercise. This will typically be a double session in our regular slot B; check the calendar.
 
 # Good work!
