@@ -5,7 +5,7 @@
 The second practical generalizes and extends the first practical, by working with constraint-based velocity and position resolution. We still work only with rigid bodies. The objectives of the practical are:
 
 1. Implement impulse-based velocity resolution by constraints (Lecture 6).
-1. Implement position correction by constraints (Lecture 9).
+1. Implement position correction by constraints (Lecture 7).
 1. Generalize collision resolution to work with the implemented constraint-resolution framework.
 1. Extend the framework with some chosen effects.  
 
@@ -33,17 +33,17 @@ The constraints are expressed using any two points on a body (which happen to be
 
 ### Velocity Resolution
 
-For equality constraints, the total velocities v1 and v2 should always satisfy J v = 0, where J is the gradient of the constraint, and v is a vector comprising v1, omega1, v2,omega2 in order (sanity check: vector length is 12 variables). If J v != 0, you will be computing ∆v to satisfy  J(v+ ∆v)=0, using the Lagrange multiplier method learnt in class (Lecture 6; note collision example in slide 22). This requires setting up an (inverse) mass matrix of 12 x 12, with the body masses and (inverse) inertia tensors in order. Use 0 for inverse mass and inverse inertia tensor for fixed bodies, which will simulate the correct effect. Note that the inertia tensor should rotate like in the first practical; essentially your constraint-based collision resolution should be almost equivalent to what you implemented explicitly before.
+For equality constraints, the total velocities v1 and v2 should always satisfy J v = 0, where J is the gradient of the constraint, and v is a vector comprising v1, omega1, v2,omega2 in order (sanity check: vector length is 12 variables). If J v != 0, you will be computing ∆v to satisfy  J(v+ ∆v)=0, using the Lagrange multiplier method learnt in class (Lecture 6). This requires setting up an (inverse) mass matrix of 12 x 12, with the body masses and (inverse) inertia tensors in order. Use 0 for inverse mass and inverse inertia tensor for fixed bodies, which will simulate the correct effect. Note that the inertia tensor should rotate like in the first practical; essentially your constraint-based collision resolution should be almost equivalent to what you implemented explicitly before.
 
 Note: the part in the mass matrix corresponding to the linear velocity has the scalar masses m1 and m2 repeated 3 times each in the diagonal of the matrix, for the x,y,z components of the respective velocities.
 
 The coefficient of restitution is given for collisions constraints in order to induce elastic velocity bias; you should use it as instructed in class (user constraints set it to 0 by default).
 
-The user constraints that are read from file attach two vertices from two meshes in a distance that has to be maintained. That is, the constraint is C(x1,x2) = |x1-x2| - d12, where d12 is computed for the position at time t=0. You should devise J for that constraint (you have a hint for it in Lecture 9; for intuition, you are supposed to get that the velocities of both vertices should not move in a way that changes this distance, like it's a fixed rod).
+The user constraints that are read from file attach two vertices from two meshes in a distance that has to be maintained. That is, the constraint is C(x1,x2) = |x1-x2| - d12, where d12 is computed for the position at time t=0. You should devise J for that constraint (for intuition, you are supposed to get that the velocities of both vertices should not move in a way that changes this distance, like it's a fixed rod).
 
 ### Position Correction
 
-Position correction is similar to velocity correction, except that we take the easy route (in the basic practical requirements), and only correct *linearly*. That is, we do not change q, only p of every body. That means the mass matrix is only 6 x 6 of body masses, without any inertia tensor components, and the Jacobian only contains derivatives relating to linear movement. That generalizes the linear-interpenetration resolution for collisions. Note that this means totally different J, M, lambda for this step, which do not relate to those computed in the velocity correction stage! The theoretical details are in lecture 9. We do not employ stiffness in this practical.
+Position correction is similar to velocity correction, except that we take the easy route (in the basic practical requirements), and only correct *linearly*. That is, we do not change q, only p of every body. That means the mass matrix is only 6 x 6 of body masses, without any inertia tensor components, and the Jacobian only contains derivatives relating to linear movement. That generalizes the linear-interpenetration resolution for collisions. Note that this means totally different J, M, lambda for this step, which do not relate to those computed in the velocity correction stage! The theoretical details are in lecture 7. We do not employ stiffness in this practical.
 
 See below for details on where to do all that in the code.
 
